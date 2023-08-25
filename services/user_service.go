@@ -2,7 +2,7 @@ package services
 
 import "restapi.com/my-apis/models"
 
-type user_services interface {
+type UserServices interface {
 	CreateUser(*models.User) error
 
 	GetUsers(*string) (*models.User, error)
