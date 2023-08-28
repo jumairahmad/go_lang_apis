@@ -24,14 +24,14 @@ func NewUserService(usercollection *mongo.Collection, ctx context.Context) UserS
 
 func (u *userServiceImpl) CreateUser(user *models.User) error {
 
-	_, err := u.usercollection.InsertOne(u.ctx, u)
+	_, err := u.usercollection.InsertOne(u.ctx, &user)
 	return err
 }
 
 func (u *userServiceImpl) GetUsers(name *string) (*models.User, error) {
 
 	var user *models.User
-	query := bson.D{bson.E{Key: "user_name", Value: name}}
+	query := bson.D{bson.E{Key: "user_name", Value: &name}}
 	err := u.usercollection.FindOne(u.ctx, query).Decode(&user)
 
 	return user, err
@@ -67,10 +67,19 @@ func (u *userServiceImpl) GetAll() ([]*models.User, error) {
 }
 
 func (u *userServiceImpl) UpdateUser(user *models.User) error {
-	filter := bson.D{bson.E{Key: "user_name", Value: user}}
-	update := bson.D{bson.E{Key: "$set", Value: bson.D{bson.E{Key: "user_name", Value: user.Name}, bson.E{Key: "user_age", Value: user.Age}, bson.E{Key: "user_address", Value: user.Address}}}}
+	filter := bson.D{bson.E{Key: "user_name", Value: user.Name}} // Corrected the filter value
+	update := bson.D{
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "user_name", Value: user.Name},       // Corrected value syntax
+			bson.E{Key: "user_age", Value: user.Age},         // Corrected value syntax
+			bson.E{Key: "user_address", Value: user.Address}, // Corrected value syntax
+		}},
+	}
 
-	result, _ := u.usercollection.UpdateOne(u.ctx, filter, update)
+	result, err := u.usercollection.UpdateOne(u.ctx, filter, update)
+	if err != nil {
+		return err
+	}
 	if result.MatchedCount != 1 {
 		return errors.New("No Matched Found For Update")
 	}
